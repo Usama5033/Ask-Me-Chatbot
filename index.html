@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ask Me | Chatbot</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    
+    <script src="https://unpkg.com/lucide-react@0.363.0/dist/lucide-react.js"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+
+    <style>
+        /* Custom scrollbar for a more polished look */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #171717;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4a4a4a;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #5a5a5a;
+        }
+        /* Style for rendered code blocks */
+        .prose pre {
+            background-color: #1a1a1a;
+            color: #f0f0f0;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+        }
+        .prose code {
+             color: #f0f0f0;
+             font-family: 'Courier New', Courier, monospace;
+        }
+        .prose a {
+            color: #9333ea;
+        }
+        .sidebar-text {
+            transition: opacity 0.2s ease-in-out;
+        }
+        #sidebar.w-20 .sidebar-text {
+            opacity: 0;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="bg-[#171717] text-gray-200 font-sans" style="font-family: 'Inter', sans-serif;">
+
+    <div id="app" class="flex h-screen overflow-hidden">
+        <nav id="sidebar" class="bg-[#212121] w-64 p-4 flex-shrink-0 transition-all duration-300 ease-in-out md:relative absolute z-30 h-full md:translate-x-0 -translate-x-full overflow-x-hidden">
+            <div class="flex flex-col h-full">
+                <div id="sidebar-header" class="flex items-center justify-between mb-4">
+                    <button id="sidebar-menu-btn" class="text-gray-400 hover:text-white p-2 rounded-full hover:bg-gray-700/50">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-menu"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+                    </button>
+                    <button id="sidebar-search-btn" title="Search (Ctrl+Shift+F)" class="text-gray-400 hover:text-white p-2 rounded-full hover:bg-gray-700/50 sidebar-text">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                    </button>
+                </div>
+
+                <div class="space-y-2 mb-6">
+                    <button id="new-chat-btn" class="flex items-center w-full hover:bg-gray-700/50 rounded-lg p-3 transition-colors duration-200 text-left">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-edit"><path d="M4 13.5V4a2 2 0 0 1 2-2h8.5L20 7.5V20a2 2 0 0 1-2 2h-5.5"/><polyline points="14 2 14 8 20 8"/><path d="M10.42 12.61a2.1 2.1 0 1 1 2.97 2.97L7.95 21 4 22l.99-3.95 5.43-5.44Z"/></svg>
+                        <span class="ml-3 font-semibold text-sm whitespace-nowrap sidebar-text">New Chat</span>
+                    </button>
+                    <button class="flex items-center w-full hover:bg-gray-700/50 rounded-lg p-3 transition-colors duration-200 text-left">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-gem"><path d="M6 3h12l4 6-10 13L2 9Z"/><path d="M12 22 6 9l-4-6h12l4 6"/><path d="M2 9h20"/></svg>
+                        <span class="ml-3 font-semibold text-sm whitespace-nowrap sidebar-text">Explore Gems</span>
+                    </button>
+                </div>
+
+                <div class="flex-grow overflow-y-auto">
+                    <p class="text-sm text-gray-500 font-semibold mb-2 px-3 sidebar-text">Recent</p>
+                    <div id="chat-history" class="space-y-2">
+                        <a href="#" class="block p-3 rounded-lg hover:bg-gray-700/50 text-sm truncate">
+                            <span class="sidebar-text">How to use Tailwind CSS</span>
+                        </a>
+                        <a href="#" class="block p-3 rounded-lg hover:bg-gray-700/50 text-sm truncate">
+                            <span class="sidebar-text">JavaScript Array methods</span>
+                        </a>
+                        <a href="#" class="block p-3 rounded-lg hover:bg-gray-700/50 text-sm truncate">
+                            <span class="sidebar-text">Explain quantum computing</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="border-t border-gray-700 pt-4">
+                    <a href="#" class="flex items-center p-3 rounded-lg hover:bg-gray-700/50">
+                        <img src="https://placehold.co/40x40/7c3aed/ffffff?text=U" alt="User Avatar" class="w-8 h-8 rounded-full flex-shrink-0">
+                        <span class="ml-3 font-semibold text-sm whitespace-nowrap sidebar-text">User</span>
+                    </a>
+                </div>
+            </div>
+        </nav>
+
+        <main class="flex-1 flex flex-col h-screen bg-[#171717]">
+            <header class="flex items-center justify-between p-4 border-b border-gray-700/50">
+                <button id="menu-btn" class="md:hidden text-gray-400 hover:text-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-menu"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+                </button>
+                <h1 class="text-lg font-semibold">Ask Me</h1>
+                <button class="text-gray-400 hover:text-white">
+                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-more-horizontal"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+                </button>
+            </header>
+
+            <div id="chat-container" class="flex-1 overflow-y-auto p-4 md:p-6">
+                <div id="chat-messages" class="max-w-3xl mx-auto space-y-6">
+                    <div id="welcome-screen" class="text-center flex flex-col items-center justify-center h-full">
+                        <div class="w-16 h-16 bg-gradient-to-tr from-purple-500 to-pink-500 rounded-full flex items-center justify-center mb-6">
+                             <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sparkles text-white"><path d="m12 3-1.9 3.9-3.9 1.9 3.9 1.9 1.9 3.9 1.9-3.9 3.9-1.9-3.9-1.9Z"/><path d="M5 8.5 3 12l2 3.5"/><path d="M19 8.5 21 12l-2 3.5"/></svg>
+                        </div>
+                        <h2 class="text-3xl font-bold text-gray-300">How can I help you today?</h2>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-12 w-full">
+                            <div class="prompt-card bg-[#212121] p-4 rounded-lg hover:bg-gray-700/50 cursor-pointer transition-colors duration-200">
+                                <h3 class="font-semibold text-gray-300">Plan a trip</h3>
+                                <p class="text-sm text-gray-500 mt-1">to see the Northern Lights</p>
+                            </div>
+                            <div class="prompt-card bg-[#212121] p-4 rounded-lg hover:bg-gray-700/50 cursor-pointer transition-colors duration-200">
+                                <h3 class="font-semibold text-gray-300">Write a thank-you note</h3>
+                                <p class="text-sm text-gray-500 mt-1">to a guest speaker</p>
+                            </div>
+                            <div class="prompt-card bg-[#212121] p-4 rounded-lg hover:bg-gray-700/50 cursor-pointer transition-colors duration-200">
+                                <h3 class="font-semibold text-gray-300">Generate a SQL query</h3>
+                                <p class="text-sm text-gray-500 mt-1">to find all users in California</p>
+                            </div>
+                            <div class="prompt-card bg-[#212121] p-4 rounded-lg hover:bg-gray-700/50 cursor-pointer transition-colors duration-200">
+                                <h3 class="font-semibold text-gray-300">Explain a concept</h3>
+                                <p class="text-sm text-gray-500 mt-1">like recursion in simple terms</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 md:p-6 bg-[#171717] border-t border-gray-700/50">
+                <div class="max-w-3xl mx-auto">
+                    <form id="chat-form" class="relative">
+                        <textarea id="chat-input" placeholder="Message Ask Me..." class="w-full bg-[#2a2a2a] border border-gray-600 rounded-xl p-4 pr-14 text-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none" rows="1"></textarea>
+                        <button id="send-btn" type="submit" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-purple-500 disabled:opacity-50 disabled:hover:text-gray-400 transition-colors duration-200">
+                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-send-horizontal"><path d="m3 3 3 9-3 9 19-9Z"/><path d="M6 12h16"/></svg>
+                        </button>
+                    </form>
+                    <p class="text-xs text-center text-gray-500 mt-2">
+                        Ask Me may display inaccurate info. Always double-check its responses.
+                    </p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- DOM Element References ---
+            const chatContainer = document.getElementById('chat-container');
+            const chatMessages = document.getElementById('chat-messages');
+            const chatForm = document.getElementById('chat-form');
+            const chatInput = document.getElementById('chat-input');
+            const sendBtn = document.getElementById('send-btn');
+            const welcomeScreen = document.getElementById('welcome-screen');
+            const newChatBtn = document.getElementById('new-chat-btn');
+            const menuBtn = document.getElementById('menu-btn'); // For mobile
+            const sidebar = document.getElementById('sidebar');
+            const sidebarMenuBtn = document.getElementById('sidebar-menu-btn'); // For desktop toggle
+
+            // --- API Configuration ---
+            // !!! KEY REPLACED AS REQUESTED !!!
+            const API_KEY = "AIzaSyDumzlkTIa-KO6YiRAMpoCWQdGgFWCwxRs"; 
+            const MODEL_NAME = "gemini-2.5-flash-preview-09-2025";
+            
+            // --- Application State ---
+            let chatHistory = [];
+
+            // --- Core Functions ---
+
+            /**
+             * Appends a message to the chat UI.
+             * @param {string} sender - 'user' or 'model'.
+             * @param {string} message - The message content (can be plain text or Markdown).
+             */
+            const addMessage = (sender, message) => {
+                // Hide welcome screen if it's visible
+                if (welcomeScreen) {
+                    welcomeScreen.style.display = 'none';
+                }
+
+                const messageWrapper = document.createElement('div');
+                messageWrapper.className = `flex items-start gap-4 message-wrapper`;
+
+                const iconSrc = sender === 'user' 
+                    ? `https://placehold.co/40x40/7c3aed/ffffff?text=U`
+                    : `data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZHRoPSIyMCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2EtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJtMTIgMy0xLjkgMy45LTMuOSAxLjkgMy45IDEuOSAxLjkgMy45IDEuOS0zLjkgMy45LTEuOS0zLjktMS45WiIvPjxwYXRoIGQ9Ik01IDguNUwzIDEybDIgMy41Ii8+PHBhdGggZD0iTTE5IDguNUwyMSAxMmwtMiAzLjUiLz48L3N2Zz4=`;
+                
+                const iconBgClass = sender === 'user' ? 'bg-purple-600' : 'bg-gradient-to-tr from-purple-500 to-pink-500';
+
+                messageWrapper.innerHTML = `
+                    <div class="w-8 h-8 rounded-full ${iconBgClass} flex-shrink-0 flex items-center justify-center">
+                        <img src="${iconSrc}" class="${sender === 'user' ? 'rounded-full' : ''}" alt="${sender} icon">
+                    </div>
+                    <div class="flex-1 message-content prose prose-invert max-w-none">
+                        ${sender === 'model' ? '<p class="font-bold mb-2">Ask Me</p>' : ''}
+                        <div class="content-text"></div>
+                    </div>
+                `;
+                
+                const contentText = messageWrapper.querySelector('.content-text');
+
+                if (sender === 'model') {
+                    // Render Markdown for model responses
+                    contentText.innerHTML = marked.parse(message);
+                } else {
+                    // Plain text for user messages to prevent XSS
+                    contentText.textContent = message;
+                }
+
+                chatMessages.appendChild(messageWrapper);
+                scrollToBottom();
+            };
+
+            /**
+             * Displays a typing indicator for the model.
+             */
+            const showTypingIndicator = () => {
+                const indicator = document.createElement('div');
+                indicator.id = 'typing-indicator';
+                indicator.className = 'flex items-start gap-4';
+                indicator.innerHTML = `
+                    <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-500 to-pink-500 flex-shrink-0 flex items-center justify-center">
+                         <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZHRoPSIyMCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2EtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJtMTIgMy0xLjkgMy45LTMuOSAxLjkgMy45IDEuOSAxLjkgMy45IDEuOS0zLjkgMy45LTEuOS0zLjktMS45WiIvPjxwYXRoIGQ9Ik01IDguNUwzIDEybDIgMy41Ii8+PHBhdGggZD0iTTE5IDguNUwyMSAxMmwtMiAzLjUiLz48L3N2Zz4=" alt="model icon">
+                    </div>
+                    <div class="flex-1 message-content prose prose-invert max-w-none">
+                         <p class="font-bold mb-2">Ask Me</p>
+                         <div class="flex items-center space-x-1">
+                             <span class="w-2 h-2 bg-gray-500 rounded-full animate-pulse" style="animation-delay: 0s;"></span>
+                             <span class="w-2 h-2 bg-gray-500 rounded-full animate-pulse" style="animation-delay: 0.2s;"></span>
+                             <span class="w-2 h-2 bg-gray-500 rounded-full animate-pulse" style="animation-delay: 0.4s;"></span>
+                         </div>
+                    </div>
+                `;
+                chatMessages.appendChild(indicator);
+                scrollToBottom();
+            };
+            
+            /**
+             * Removes the typing indicator.
+             */
+            const hideTypingIndicator = () => {
+                const indicator = document.getElementById('typing-indicator');
+                if (indicator) {
+                    indicator.remove();
+                }
+            };
+
+            /**
+             * Makes an API call to Gemini with exponential backoff.
+             * @param {string} prompt - The user's prompt.
+             * @param {number} retries - The number of retries left.
+             * @param {number} delay - The delay before the next retry.
+             * @returns {Promise<string>} The model's response text.
+             */
+            const callGeminiAPI = async (prompt, retries = 3, delay = 1000) => {
+                const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${API_KEY}`;
+                try {
+                    const payload = {
+                        contents: [{ parts: [{ text: prompt }] }],
+                    };
+
+                    const response = await fetch(API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload),
+                    });
+
+                    if (!response.ok) {
+                        const errorBody = await response.json();
+                        console.error("API Error Body:", errorBody);
+                        const errorMessage = errorBody.error?.message || 'Unknown error';
+                        throw new Error(`HTTP error! status: ${response.status} - ${errorMessage}`);
+                    }
+
+                    const result = await response.json();
+                    const candidate = result.candidates?.[0];
+
+                    if (candidate && candidate.content?.parts?.[0]?.text) {
+                        return candidate.content.parts[0].text;
+                    } else {
+                        console.warn("Unexpected API response structure:", result);
+                        return "I received a response, but couldn't process it. The format might be incorrect.";
+                    }
+                } catch (error) {
+                    console.error("API Call Error:", error);
+                    if (retries > 0) {
+                        console.log(`Retrying in ${delay / 1000}s... (${retries} retries left)`);
+                        await new Promise(res => setTimeout(res, delay));
+                        return callGeminiAPI(prompt, retries - 1, delay * 2);
+                    } else {
+                        if (error.message.includes("503")) {
+                            return "The AI model is currently overloaded or unavailable. This is a temporary issue with the service. Please try your request again in a few moments.";
+                        }
+                        if (error.message.includes("400")) {
+                             return "There might be an issue with your API key. Please ensure it is correct and has the necessary permissions. You can refresh the page to enter a new key.";
+                        }
+                        return `Sorry, I'm having trouble connecting. Please check your network connection and API key. Error: ${error.message}`;
+                    }
+                }
+            };
+            
+            /**
+             * Handles the chat form submission.
+             * @param {Event} e - The form submission event.
+             */
+            const handleChatSubmit = async (e) => {
+                e.preventDefault();
+                const userMessage = chatInput.value.trim();
+                if (!userMessage) return;
+
+                // --- UI updates for user message ---
+                addMessage('user', userMessage);
+                chatForm.reset();
+                adjustTextareaHeight();
+                sendBtn.disabled = true;
+                
+                // --- Show loading and call API ---
+                showTypingIndicator();
+                
+                const modelResponse = await callGeminiAPI(userMessage);
+
+                // --- UI updates for model response ---
+                hideTypingIndicator();
+                addMessage('model', modelResponse);
+                sendBtn.disabled = false;
+                chatInput.focus();
+            };
+
+            // --- Utility Functions ---
+
+            /**
+             * Scrolls the chat container to the bottom.
+             */
+            const scrollToBottom = () => {
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            };
+
+            /**
+             * Adjusts textarea height based on content.
+             */
+            const adjustTextareaHeight = () => {
+                chatInput.style.height = 'auto';
+                chatInput.style.height = `${chatInput.scrollHeight}px`;
+            };
+            
+            /**
+             * Starts a new chat session.
+             */
+            const startNewChat = () => {
+                chatMessages.innerHTML = '';
+                if(welcomeScreen) {
+                    chatMessages.appendChild(welcomeScreen);
+                    welcomeScreen.style.display = 'flex';
+                }
+                chatHistory = [];
+            };
+
+            /**
+             * Toggles the sidebar between collapsed and expanded states on desktop.
+             */
+            const toggleSidebar = () => {
+                sidebar.classList.toggle('w-64');
+                sidebar.classList.toggle('w-20');
+            };
+
+            // --- Event Listeners ---
+            chatForm.addEventListener('submit', handleChatSubmit);
+            chatInput.addEventListener('input', adjustTextareaHeight);
+            chatInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    chatForm.dispatchEvent(new Event('submit'));
+                }
+            });
+
+            // Handle prompt suggestion clicks
+            document.querySelectorAll('.prompt-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    const title = card.querySelector('h3').textContent;
+                    const subtitle = card.querySelector('p').textContent;
+                    chatInput.value = `${title} ${subtitle}`;
+                    adjustTextareaHeight();
+                    chatForm.dispatchEvent(new Event('submit'));
+                });
+            });
+
+            // New chat button
+            newChatBtn.addEventListener('click', startNewChat);
+
+            // Desktop sidebar toggle
+            sidebarMenuBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleSidebar();
+            });
+
+            // Mobile menu toggle to show/hide
+            menuBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                sidebar.classList.remove('-translate-x-full');
+            });
+            
+            // Close sidebar when clicking outside on mobile
+            document.addEventListener('click', (e) => {
+                 if (window.innerWidth < 768 && !sidebar.contains(e.target) && !sidebar.classList.contains('-translate-x-full')) {
+                     sidebar.classList.add('-translate-x-full');
+                 }
+            });
+            
+            // --- Initial Setup ---
+            adjustTextareaHeight();
+
+        });
+    </script>
+</body>
+</html>
